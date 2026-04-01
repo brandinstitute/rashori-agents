@@ -1,0 +1,142 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://www.rashori.com/schemas/agent-passport-v1.json",
+  "title": "Rashori Agent Passport",
+  "description": "Schema for declaring an AI agent's identity, capabilities, and trust level on the Rashori platform.",
+  "type": "object",
+  "required": ["schema_version", "bot_name", "contact_email", "capabilities"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0",
+      "description": "Version of this schema"
+    },
+    "bot_name": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 64,
+      "description": "Display name shown to users in the pairing screen"
+    },
+    "bot_description": {
+      "type": "string",
+      "maxLength": 512,
+      "description": "Short description of what this agent does"
+    },
+    "contact_email": {
+      "type": "string",
+      "format": "email",
+      "description": "Developer contact email for admin communication"
+    },
+    "webhook_url": {
+      "type": "string",
+      "format": "uri",
+      "pattern": "^https://",
+      "description": "HTTPS URL to receive event notifications. Must use TLS."
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "create_business",
+          "update_business",
+          "create_idea",
+          "update_idea",
+          "list_ideas",
+          "find_matches",
+          "start_round",
+          "list_users",
+          "read_profile"
+        ]
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "Scopes this bot requests. Only listed scopes will be granted."
+    },
+    "owner_type": {
+      "type": "string",
+      "enum": ["developer", "system"],
+      "default": "developer",
+      "description": "Bot owner type. 'system' is reserved for Rashori internal bots."
+    },
+    "agent_type": {
+      "type": "string",
+      "enum": ["autonomous", "semi_autonomous", "assistant"],
+      "description": "Operational model of the agent. Informational only.",
+      "examples": {
+        "autonomous": "Runs scheduled jobs without per-action human input",
+        "semi_autonomous": "Requires human confirmation for sensitive actions",
+        "assistant": "User-driven — acts only on direct user commands"
+      }
+    },
+    "human_oversight": {
+      "type": "object",
+      "description": "Declares how this agent handles human oversight requirements",
+      "properties": {
+        "requires_approval_for_idea_submit": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the agent waits for explicit human approval before submitting ideas"
+        },
+        "requires_approval_for_round_start": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the agent waits for explicit human approval before starting rounds"
+        },
+        "notifies_user_before_action": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the agent notifies linked users before performing actions"
+        }
+      }
+    },
+    "mcp_compatible": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this agent implements the MCP protocol for tool discovery"
+    },
+    "mcp_server_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "If mcp_compatible is true, the URL of the agent's MCP server"
+    },
+    "data_retention_days": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "How many days the agent retains user data. 0 = no retention."
+    },
+    "privacy_policy_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL to the agent developer's privacy policy"
+    }
+  },
+  "if": {
+    "properties": {
+      "mcp_compatible": { "const": true }
+    }
+  },
+  "then": {
+    "required": ["mcp_server_url"]
+  },
+  "examples": [
+    {
+      "schema_version": "1.0",
+      "bot_name": "IdeaAssist",
+      "bot_description": "Helps founders structure and publish business ideas on Rashori.",
+      "contact_email": "founder@example.com",
+      "webhook_url": "https://yourserver.com/webhook/rashori",
+      "capabilities": ["create_business", "create_idea", "start_round", "list_ideas"],
+      "owner_type": "developer",
+      "agent_type": "semi_autonomous",
+      "human_oversight": {
+        "requires_approval_for_idea_submit": true,
+        "requires_approval_for_round_start": true,
+        "notifies_user_before_action": true
+      },
+      "mcp_compatible": false,
+      "data_retention_days": 30,
+      "privacy_policy_url": "https://example.com/privacy"
+    }
+  ]
+}
